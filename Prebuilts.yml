@@ -7,9 +7,4 @@
 - name: Fenix
   source: ghrelease
   repo: mozilla-mobile/fenix
-  regex: fenix-.*-arm64-v8a.apk
-  overrides: Chrome Chrome-Stub
-- name: VancedManager
-  source: ghrelease
-  repo: YTVanced/VancedManager
-  regex: manager\.apk
+  regex: fenix-.*-arm64-v8a\.apk

@@ -1,8 +1,6 @@
-import requests
 from .base import DirectDownloadProvider, fancy_dl
 import logging
 from apkverify import ApkSignature
-from io import BytesIO
 import zipfile
 import json
 logger = logging.getLogger("F-Droid provider")

@@ -1,0 +1,595 @@
+From bb507df221da0c2d0dccf71b82d7d291102d2f43 Mon Sep 17 00:00:00 2001
+From: Adithya R <gh0strider.2k18.reborn@gmail.com>
+Date: Sun, 18 Sep 2022 00:39:33 +0530
+Subject: [PATCH] SystemUI: Add hotspot toggle in QS internet dialog
+
+Inspired by nothing ;)
+
+Shrink down the dialog a bit to make way for it.
+
+Change-Id: I56b8c70011c90103e87ee298d83d9f93270d8bc5
+---
+ .../res/drawable/ic_internet_hotspot.xml      |  11 ++
+ .../drawable/ic_internet_hotspot_disabled.xml |  11 ++
+ .../layout/internet_connectivity_dialog.xml   |  83 +++++++++++++-
+ packages/SystemUI/res/values/dimens.xml       |   2 +
+ packages/SystemUI/res/values/strings.xml      |   5 +
+ .../qs/tiles/dialog/InternetDialog.java       | 103 +++++++++++++++++-
+ .../dialog/InternetDialogController.java      |  68 +++++++++++-
+ 7 files changed, 276 insertions(+), 7 deletions(-)
+ create mode 100644 packages/SystemUI/res/drawable/ic_internet_hotspot.xml
+ create mode 100644 packages/SystemUI/res/drawable/ic_internet_hotspot_disabled.xml
+
+diff --git a/packages/SystemUI/res/drawable/ic_internet_hotspot.xml b/packages/SystemUI/res/drawable/ic_internet_hotspot.xml
+new file mode 100644
+index 000000000000..efe34a1cd329
+--- /dev/null
++++ b/packages/SystemUI/res/drawable/ic_internet_hotspot.xml
+@@ -0,0 +1,11 @@
++<vector
++    xmlns:android="http://schemas.android.com/apk/res/android"
++    android:width="20dp"
++    android:height="20dp"
++    android:viewportWidth="20"
++    android:viewportHeight="20"
++    android:tint="?android:attr/colorControlNormal">
++    <path
++        android:pathData="M 10 8.7 C 8.9 8.7 8 9.6 8 10.7 C 8 11.8 8.9 12.7 10 12.7 C 11.1 12.7 12 11.8 12 10.7 C 12 9.6 11.1 8.7 10 8.7 Z M 16 10.7 C 16 7.39 13.31 4.7 10 4.7 C 6.69 4.7 4 7.39 4 10.7 C 4 12.92 5.21 14.85 7 15.89 L 8 14.15 C 6.81 13.45 6 12.18 6 10.7 C 6 8.49 7.79 6.7 10 6.7 C 12.21 6.7 14 8.49 14 10.7 C 14 12.18 13.19 13.45 12 14.15 L 13 15.89 C 14.79 14.85 16 12.92 16 10.7 Z M 10 0.7 C 4.48 0.7 0 5.18 0 10.7 C 0 14.4 2.01 17.62 4.99 19.35 L 5.99 17.62 C 3.61 16.23 2 13.66 2 10.7 C 2 6.28 5.58 2.7 10 2.7 C 14.42 2.7 18 6.28 18 10.7 C 18 13.66 16.39 16.23 14 17.62 L 15 19.35 C 17.99 17.62 20 14.4 20 10.7 C 20 5.18 15.52 0.7 10 0.7 Z"
++        android:fillColor="#000000"/>
++</vector>
+diff --git a/packages/SystemUI/res/drawable/ic_internet_hotspot_disabled.xml b/packages/SystemUI/res/drawable/ic_internet_hotspot_disabled.xml
+new file mode 100644
+index 000000000000..2d30019780f0
+--- /dev/null
++++ b/packages/SystemUI/res/drawable/ic_internet_hotspot_disabled.xml
+@@ -0,0 +1,11 @@
++<vector
++    xmlns:android="http://schemas.android.com/apk/res/android"
++    android:width="21dp"
++    android:height="21dp"
++    android:viewportWidth="21"
++    android:viewportHeight="21"
++    android:tint="?android:attr/colorControlNormal">
++    <path
++        android:pathData="M 1.61 0.81 L 0.19 2.22 L 2.88 4.91 C 1.58 6.6 0.8 8.71 0.8 11 C 0.8 13.76 1.92 16.26 3.73 18.07 L 5.15 16.65 C 3.7 15.21 2.8 13.21 2.8 11 C 2.8 9.25 3.37 7.65 4.31 6.34 L 5.74 7.77 C 5.15 8.7 4.8 9.81 4.8 11 C 4.8 12.66 5.48 14.15 6.56 15.24 L 7.98 13.82 C 7.25 13.1 6.8 12.11 6.8 11 C 6.8 10.37 6.95 9.77 7.21 9.24 L 8.82 10.85 C 8.82 10.9 8.8 10.95 8.8 11 C 8.8 11.55 9.03 12.05 9.39 12.41 C 9.75 12.77 10.25 13 10.8 13 C 10.85 13 10.9 12.99 10.96 12.98 L 18.58 20.6 L 19.99 19.19 L 1.61 0.81 Z M 16.5 12.87 C 16.69 12.28 16.8 11.65 16.8 11 C 16.8 7.69 14.11 5 10.8 5 C 10.15 5 9.52 5.1 8.93 5.3 L 10.64 7.01 C 10.69 7 10.75 7 10.8 7 C 13.01 7 14.8 8.79 14.8 11 C 14.8 11.05 14.8 11.11 14.79 11.16 L 16.5 12.87 Z M 10.8 3 C 15.22 3 18.8 6.58 18.8 11 C 18.8 12.22 18.53 13.37 18.03 14.4 L 19.52 15.89 C 20.33 14.45 20.8 12.78 20.8 11 C 20.8 5.48 16.32 1 10.8 1 C 9.02 1 7.36 1.46 5.91 2.28 L 7.39 3.76 C 8.43 3.27 9.58 3 10.8 3 Z"
++        android:fillColor="#000000"/>
++</vector>
+diff --git a/packages/SystemUI/res/layout/internet_connectivity_dialog.xml b/packages/SystemUI/res/layout/internet_connectivity_dialog.xml
+index 5b961595fbd3..9432b8763f2b 100644
+--- a/packages/SystemUI/res/layout/internet_connectivity_dialog.xml
++++ b/packages/SystemUI/res/layout/internet_connectivity_dialog.xml
+@@ -127,7 +127,8 @@
+ 
+                 <LinearLayout
+                     android:id="@+id/mobile_network_layout"
+-                    style="@style/InternetDialog.Network">
++                    style="@style/InternetDialog.Network"
++                    android:layout_height="72dp">
+ 
+                     <FrameLayout
+                         android:layout_width="24dp"
+@@ -190,10 +191,84 @@
+ 
+                 </LinearLayout>
+ 
++                <Space
++                    android:id="@+id/mobile_connected_space"
++                    android:layout_height="8dp"
++                    android:layout_width="match_parent"
++                    android:visibility="gone"/>
++
++                <LinearLayout
++                    android:id="@+id/hotspot_layout"
++                    style="@style/InternetDialog.Network"
++                    android:layout_height="72dp">
++
++                    <FrameLayout
++                        android:layout_width="24dp"
++                        android:layout_height="24dp"
++                        android:clickable="false"
++                        android:layout_gravity="center_vertical|start">
++                        <ImageView
++                            android:id="@+id/hotspot_icon"
++                            android:autoMirrored="true"
++                            android:layout_width="wrap_content"
++                            android:layout_height="wrap_content"
++                            android:layout_gravity="center"
++                            android:src="@drawable/ic_internet_hotspot_disabled"/>
++                    </FrameLayout>
++
++                    <LinearLayout
++                        android:layout_weight="1"
++                        android:orientation="vertical"
++                        android:clickable="false"
++                        android:layout_width="wrap_content"
++                        android:layout_height="match_parent"
++                        android:gravity="start|center_vertical">
++                        <TextView
++                            android:id="@+id/hotspot_title"
++                            android:maxLines="1"
++                            style="@style/InternetDialog.NetworkTitle"/>
++                        <TextView
++                            android:id="@+id/hotspot_summary"
++                            style="@style/InternetDialog.NetworkSummary"/>
++                    </LinearLayout>
++
++                    <View
++                        android:id="@+id/hotspot_toggle_divider"
++                        android:layout_width="1dp"
++                        android:layout_height="28dp"
++                        android:layout_marginStart="7dp"
++                        android:layout_marginEnd="16dp"
++                        android:layout_gravity="center_vertical"
++                        android:background="?android:attr/textColorSecondary"/>
++
++                    <FrameLayout
++                        android:layout_width="@dimen/settingslib_switch_track_width"
++                        android:layout_height="48dp"
++                        android:layout_gravity="end|center_vertical">
++                        <Switch
++                            android:id="@+id/hotspot_toggle"
++                            android:contentDescription="@string/quick_settings_hotspot_label"
++                            android:switchMinWidth="@dimen/settingslib_switch_track_width"
++                            android:layout_gravity="center"
++                            android:layout_width="@dimen/settingslib_switch_track_width"
++                            android:layout_height="match_parent"
++                            android:track="@drawable/settingslib_track_selector"
++                            android:thumb="@drawable/settingslib_thumb_selector"
++                            android:theme="@style/MainSwitch.Settingslib"/>
++                    </FrameLayout>
++
++                </LinearLayout>
++
++                <Space
++                    android:id="@+id/wifi_connected_space"
++                    android:layout_height="8dp"
++                    android:layout_width="match_parent"
++                    android:visibility="gone"/>
++
+                 <LinearLayout
+                     android:id="@+id/turn_on_wifi_layout"
+                     style="@style/InternetDialog.Network"
+-                    android:layout_height="@dimen/internet_dialog_wifi_network_height"
++                    android:layout_height="@dimen/internet_dialog_wifi_toggle_height"
+                     android:gravity="center"
+                     android:clickable="false"
+                     android:focusable="false">
+@@ -245,6 +320,7 @@
+                     android:id="@+id/wifi_connected_layout"
+                     style="@style/InternetDialog.Network"
+                     android:layout_height="@dimen/internet_dialog_wifi_network_height"
++                    android:layout_marginTop="8dp"
+                     android:paddingStart="20dp"
+                     android:paddingEnd="24dp"
+                     android:background="@drawable/settingslib_switch_bar_bg_on"
+@@ -308,12 +384,13 @@
+             <LinearLayout
+                 android:id="@+id/see_all_layout"
+                 android:layout_width="match_parent"
+-                android:layout_height="64dp"
++                android:layout_height="56dp"
+                 android:clickable="true"
+                 android:focusable="true"
+                 android:background="?android:attr/selectableItemBackground"
+                 android:gravity="center_vertical|center_horizontal"
+                 android:orientation="horizontal"
++                android:paddingTop="8dp"
+                 android:paddingStart="22dp"
+                 android:paddingEnd="22dp">
+ 
+diff --git a/packages/SystemUI/res/values/dimens.xml b/packages/SystemUI/res/values/dimens.xml
+index 4db24afad034..058b39b840ee 100644
+--- a/packages/SystemUI/res/values/dimens.xml
++++ b/packages/SystemUI/res/values/dimens.xml
+@@ -1336,6 +1336,8 @@
+     <dimen name="internet_dialog_list_max_height">662dp</dimen>
+     <!-- The height of the WiFi network in Internet panel. -->
+     <dimen name="internet_dialog_wifi_network_height">72dp</dimen>
++    <!-- The height of the WiFi toggle layout in Internet panel -->
++    <dimen name="internet_dialog_wifi_toggle_height">56dp</dimen>
+ 
+     <!-- The width of large/content heavy dialogs (e.g. Internet, Media output, etc) -->
+     <dimen name="large_dialog_width">@dimen/match_parent</dimen>
+diff --git a/packages/SystemUI/res/values/strings.xml b/packages/SystemUI/res/values/strings.xml
+index 529d60d47bb6..5b4aa9659516 100644
+--- a/packages/SystemUI/res/values/strings.xml
++++ b/packages/SystemUI/res/values/strings.xml
+@@ -663,6 +663,11 @@
+         <item quantity="one">%d device</item>
+         <item quantity="other">%d devices</item>
+     </plurals>
++    <!-- QuickSettings: InternetDialog: Summary for how many devices are connected to the hotspot [CHAR LIMIT=NONE] -->
++    <plurals name="quick_settings_internet_hotspot_summary_num_devices">
++        <item quantity="one">%d device connected</item>
++        <item quantity="other">%d devices connected</item>
++    </plurals>
+     <!-- QuickSettings: Notifications [CHAR LIMIT=NONE] -->
+     <!-- QuickSettings: Flashlight [CHAR LIMIT=NONE] -->
+     <string name="quick_settings_flashlight_label">Flashlight</string>
+diff --git a/packages/SystemUI/src/com/android/systemui/qs/tiles/dialog/InternetDialog.java b/packages/SystemUI/src/com/android/systemui/qs/tiles/dialog/InternetDialog.java
+index e64bdc74aa1f..6d7b429e9a93 100644
+--- a/packages/SystemUI/src/com/android/systemui/qs/tiles/dialog/InternetDialog.java
++++ b/packages/SystemUI/src/com/android/systemui/qs/tiles/dialog/InternetDialog.java
+@@ -32,6 +32,8 @@
+ import android.graphics.drawable.Drawable;
+ import android.net.Network;
+ import android.net.NetworkCapabilities;
++import android.net.wifi.SoftApConfiguration;
++import android.net.wifi.WifiManager;
+ import android.os.Bundle;
+ import android.os.Handler;
+ import android.os.RemoteException;
+@@ -48,6 +50,7 @@
+ import android.view.Gravity;
+ import android.view.LayoutInflater;
+ import android.view.View;
++import android.view.ViewGroup;
+ import android.view.Window;
+ import android.view.WindowManager;
+ import android.widget.Button;
+@@ -120,6 +123,7 @@ public class InternetDialog extends SystemUIDialog implements
+     private LinearLayout mMobileNetworkLayout;
+     private LinearLayout mTurnWifiOnLayout;
+     private LinearLayout mEthernetLayout;
++    private LinearLayout mHotspotLayout;
+     private TextView mWifiToggleTitleText;
+     private LinearLayout mWifiScanNotifyLayout;
+     private TextView mWifiScanNotifyText;
+@@ -135,7 +139,13 @@ public class InternetDialog extends SystemUIDialog implements
+     private TextView mAirplaneModeSummaryText;
+     private Switch mMobileDataToggle;
+     private View mMobileToggleDivider;
++    private View mMobileConnectedSpace;
++    private ImageView mHotspotIcon;
++    private TextView mHotspotTitleText;
++    private TextView mHotspotSummaryText;
++    private Switch mHotspotToggle;
+     private Switch mWiFiToggle;
++    private View mWifiConnectedSpace;
+     private Button mDoneButton;
+     private Button mAirplaneModeButton;
+     private Drawable mBackgroundOn;
+@@ -222,6 +232,7 @@ public void onCreate(Bundle savedInstanceState) {
+         mProgressBar = mDialogView.requireViewById(R.id.wifi_searching_progress);
+         mEthernetLayout = mDialogView.requireViewById(R.id.ethernet_layout);
+         mMobileNetworkLayout = mDialogView.requireViewById(R.id.mobile_network_layout);
++        mHotspotLayout = mDialogView.requireViewById(R.id.hotspot_layout);
+         mTurnWifiOnLayout = mDialogView.requireViewById(R.id.turn_on_wifi_layout);
+         mWifiToggleTitleText = mDialogView.requireViewById(R.id.wifi_toggle_title);
+         mWifiScanNotifyLayout = mDialogView.requireViewById(R.id.wifi_scan_notify_layout);
+@@ -241,7 +252,13 @@ public void onCreate(Bundle savedInstanceState) {
+         mAirplaneModeSummaryText = mDialogView.requireViewById(R.id.airplane_mode_summary);
+         mMobileToggleDivider = mDialogView.requireViewById(R.id.mobile_toggle_divider);
+         mMobileDataToggle = mDialogView.requireViewById(R.id.mobile_toggle);
++        mMobileConnectedSpace = mDialogView.requireViewById(R.id.mobile_connected_space);
++        mHotspotIcon = mDialogView.requireViewById(R.id.hotspot_icon);
++        mHotspotTitleText = mDialogView.requireViewById(R.id.hotspot_title);
++        mHotspotSummaryText = mDialogView.requireViewById(R.id.hotspot_summary);
++        mHotspotToggle = mDialogView.requireViewById(R.id.hotspot_toggle);
+         mWiFiToggle = mDialogView.requireViewById(R.id.wifi_toggle);
++        mWifiConnectedSpace = mDialogView.requireViewById(R.id.wifi_connected_space);
+         mBackgroundOn = mContext.getDrawable(R.drawable.settingslib_switch_bar_bg_on);
+         mInternetDialogTitle.setText(getDialogTitleText());
+         mInternetDialogTitle.setGravity(Gravity.START | Gravity.CENTER_VERTICAL);
+@@ -255,6 +272,7 @@ public void onCreate(Bundle savedInstanceState) {
+         }
+ 
+         setOnClickListener();
++        setHotspotLayout();
+         mTurnWifiOnLayout.setBackground(null);
+         mAirplaneModeButton.setVisibility(
+                 mInternetDialogController.isAirplaneModeEnabled() ? View.VISIBLE : View.GONE);
+@@ -293,6 +311,8 @@ public void onStop() {
+         mHandler.removeCallbacks(mHideSearchingRunnable);
+         mMobileNetworkLayout.setOnClickListener(null);
+         mMobileDataToggle.setOnCheckedChangeListener(null);
++        mHotspotLayout.setOnClickListener(null);
++        mHotspotToggle.setOnCheckedChangeListener(null);
+         mConnectedWifListLayout.setOnClickListener(null);
+         mSeeAllLayout.setOnClickListener(null);
+         mWiFiToggle.setOnCheckedChangeListener(null);
+@@ -316,8 +336,10 @@ public void dismissDialog() {
+      *
+      * @param shouldUpdateMobileNetwork {@code true} for update the mobile network layout,
+      * otherwise {@code false}.
++     * @param shouldUpdateHotspot {@code true} for update the hotspot layout,
++     * otherwise {@code false}.
+      */
+-    void updateDialog(boolean shouldUpdateMobileNetwork) {
++    void updateDialog(boolean shouldUpdateMobileNetwork, boolean shouldUpdateHotspot) {
+         if (DEBUG) {
+             Log.d(TAG, "updateDialog");
+         }
+@@ -332,6 +354,10 @@ void updateDialog(boolean shouldUpdateMobileNetwork) {
+                     mInternetDialogController.isCarrierNetworkActive());
+         }
+ 
++        if (shouldUpdateHotspot) {
++            setHotspotLayout();
++        }
++
+         if (!mCanConfigWifi) {
+             return;
+         }
+@@ -346,6 +372,10 @@ void updateDialog(boolean shouldUpdateMobileNetwork) {
+         updateWifiScanNotify(isWifiEnabled, isWifiScanEnabled, isDeviceLocked);
+     }
+ 
++    void updateDialog(boolean shouldUpdateMobileNetwork) {
++        updateDialog(shouldUpdateMobileNetwork, false /* shouldUpdateHotspot */);
++    }
++
+     private void setOnClickListener() {
+         mMobileNetworkLayout.setOnClickListener(v -> {
+             if (mInternetDialogController.isMobileDataEnabled()
+@@ -364,6 +394,9 @@ private void setOnClickListener() {
+                                 isChecked, false);
+                     }
+                 });
++        mHotspotLayout.setOnClickListener(mInternetDialogController::launchHotspotSetting);
++        mHotspotToggle.setOnCheckedChangeListener(
++                (buttonView, isChecked) -> mInternetDialogController.setHotspotEnabled(isChecked));
+         mConnectedWifListLayout.setOnClickListener(this::onClickConnectedWifi);
+         mSeeAllLayout.setOnClickListener(this::onClickSeeMoreButton);
+         mWiFiToggle.setOnCheckedChangeListener(
+@@ -447,6 +480,8 @@ private void setMobileDataLayout(boolean activeNetworkIsCellular,
+             }
+             mMobileNetworkLayout.setBackground(
+                     isNetworkConnected ? mBackgroundOn : mBackgroundOff);
++            mMobileConnectedSpace.setVisibility(
++                    isNetworkConnected ? View.VISIBLE : View.GONE);
+ 
+             TypedArray array = mContext.obtainStyledAttributes(
+                     R.style.InternetDialog_Divider_Active, new int[]{android.R.attr.background});
+@@ -462,6 +497,26 @@ private void setMobileDataLayout(boolean activeNetworkIsCellular,
+         }
+     }
+ 
++    private void setHotspotLayout() {
++        if (!mInternetDialogController.isHotspotAvailable()) {
++            mHotspotLayout.setVisibility(View.GONE);
++            return;
++        }
++        mHotspotLayout.setVisibility(View.VISIBLE);
++        mHotspotTitleText.setText(getHotspotTitle());
++        mHotspotSummaryText.setText(getHotspotSummary());
++
++        boolean enabled = mInternetDialogController.isHotspotEnabled();
++        mHotspotIcon.setImageResource(enabled ? R.drawable.ic_internet_hotspot
++                : R.drawable.ic_internet_hotspot_disabled);
++        mHotspotToggle.setChecked(enabled);
++
++        boolean dataSaver = mInternetDialogController.isDataSaverEnabled();
++        mHotspotTitleText.setEnabled(!dataSaver);
++        mHotspotSummaryText.setEnabled(!dataSaver);
++        mHotspotToggle.setEnabled(!dataSaver);
++    }
++
+     @MainThread
+     private void updateWifiToggle(boolean isWifiEnabled, boolean isDeviceLocked) {
+         if (mWiFiToggle.isChecked() != isWifiEnabled) {
+@@ -472,8 +527,15 @@ private void updateWifiToggle(boolean isWifiEnabled, boolean isDeviceLocked) {
+                     ? R.style.TextAppearance_InternetDialog_Active
+                     : R.style.TextAppearance_InternetDialog);
+         }
+-        mTurnWifiOnLayout.setBackground(
+-                (isDeviceLocked && mConnectedWifiEntry != null) ? mBackgroundOn : null);
++
++        boolean showBackground = isDeviceLocked && mConnectedWifiEntry != null;
++        ViewGroup.LayoutParams lp = mTurnWifiOnLayout.getLayoutParams();
++        lp.height = mContext.getResources().getDimensionPixelSize(
++                showBackground ? R.dimen.internet_dialog_wifi_network_height
++                : R.dimen.internet_dialog_wifi_toggle_height);
++        mTurnWifiOnLayout.setLayoutParams(lp);
++        mTurnWifiOnLayout.setBackground(showBackground ? mBackgroundOn : null);
++        mWifiConnectedSpace.setVisibility(showBackground ? View.VISIBLE : View.GONE);
+ 
+         if (!mCanChangeWifiState && mWiFiToggle.isEnabled()) {
+             mWiFiToggle.setEnabled(false);
+@@ -596,6 +658,35 @@ String getMobileNetworkSummary() {
+         return mInternetDialogController.getMobileNetworkSummary();
+     }
+ 
++    private CharSequence getHotspotTitle() {
++        final WifiManager wifiManager = mInternetDialogController.getWifiManager();
++        if (wifiManager != null) {
++            final SoftApConfiguration softApConfig = wifiManager.getSoftApConfiguration();
++            if (softApConfig != null) {
++                return softApConfig.getSsid();
++            }
++        }
++        return mContext.getString(R.string.quick_settings_hotspot_label);
++    }
++
++    String getHotspotSummary() {
++        if (mInternetDialogController.isDataSaverEnabled()) {
++            return mContext.getString(
++                    R.string.quick_settings_hotspot_secondary_label_data_saver_enabled);
++        } else if (mInternetDialogController.isHotspotTransient()) {
++            return mContext.getString(R.string.quick_settings_hotspot_secondary_label_transient);
++        } else if (mInternetDialogController.isHotspotEnabled()) {
++            int numDevices = mInternetDialogController.getHotspotNumDevices();
++            if (numDevices > 0) {
++                return mContext.getResources().getQuantityString(
++                        R.plurals.quick_settings_internet_hotspot_summary_num_devices,
++                        numDevices, numDevices);
++            }
++            return mContext.getString(R.string.switch_bar_on);
++        }
++        return mContext.getString(R.string.switch_bar_off);
++    }
++
+     protected void showProgressBar() {
+         if (!mInternetDialogController.isWifiEnabled()
+                 || mInternetDialogController.isDeviceLocked()) {
+@@ -753,6 +844,12 @@ public void onAccessPointsChanged(@Nullable List<WifiEntry> wifiEntries,
+         });
+     }
+ 
++    @Override
++    public void onHotspotChanged() {
++        mHandler.post(() -> updateDialog(false /* shouldUpdateMobileNetwork */,
++                true /* shouldUpdateHotspot */));
++    }
++
+     @Override
+     public void onWindowFocusChanged(boolean hasFocus) {
+         super.onWindowFocusChanged(hasFocus);
+diff --git a/packages/SystemUI/src/com/android/systemui/qs/tiles/dialog/InternetDialogController.java b/packages/SystemUI/src/com/android/systemui/qs/tiles/dialog/InternetDialogController.java
+index 3ba9ed1c7151..150e5ba6388e 100644
+--- a/packages/SystemUI/src/com/android/systemui/qs/tiles/dialog/InternetDialogController.java
++++ b/packages/SystemUI/src/com/android/systemui/qs/tiles/dialog/InternetDialogController.java
+@@ -34,8 +34,10 @@
+ import android.graphics.drawable.Drawable;
+ import android.graphics.drawable.LayerDrawable;
+ import android.net.ConnectivityManager;
++import android.net.INetworkPolicyListener;
+ import android.net.Network;
+ import android.net.NetworkCapabilities;
++import android.net.NetworkPolicyManager;
+ import android.net.wifi.WifiManager;
+ import android.os.Handler;
+ import android.os.UserHandle;
+@@ -72,6 +74,7 @@
+ import com.android.settingslib.mobile.TelephonyIcons;
+ import com.android.settingslib.net.SignalStrengthUtil;
+ import com.android.settingslib.wifi.WifiUtils;
++import com.android.systemui.Dependency;
+ import com.android.systemui.R;
+ import com.android.systemui.animation.ActivityLaunchAnimator;
+ import com.android.systemui.animation.DialogLaunchAnimator;
+@@ -80,6 +83,7 @@
+ import com.android.systemui.dagger.qualifiers.Main;
+ import com.android.systemui.plugins.ActivityStarter;
+ import com.android.systemui.statusbar.connectivity.AccessPointController;
++import com.android.systemui.statusbar.policy.HotspotController;
+ import com.android.systemui.statusbar.policy.KeyguardStateController;
+ import com.android.systemui.statusbar.policy.LocationController;
+ import com.android.systemui.toast.SystemUIToast;
+@@ -163,6 +167,9 @@ public class InternetDialogController implements AccessPointController.AccessPoi
+     private WifiStateWorker mWifiStateWorker;
+     private int mNonDdsCallState = TelephonyManager.CALL_STATE_IDLE;
+ 
++    private final HotspotController mHotspotController;
++    private final NetworkPolicyManager mPolicyManager;
++
+     @VisibleForTesting
+     static final float TOAST_PARAMS_HORIZONTAL_WEIGHT = 1.0f;
+     @VisibleForTesting
+@@ -201,6 +208,26 @@ public void onSimStateChanged(int subId, int slotId, int simState) {
+                 }
+             };
+ 
++    private final HotspotController.Callback mHotspotCallback =
++            new HotspotController.Callback() {
++                @Override
++                public void onHotspotChanged(boolean enabled, int numDevices) {
++                    mCallback.onHotspotChanged();
++                }
++
++                @Override
++                public void onHotspotAvailabilityChanged(boolean available) {
++                    mCallback.onHotspotChanged();
++                }
++            };
++
++    private final INetworkPolicyListener mPolicyListener = new NetworkPolicyManager.Listener() {
++        @Override
++        public void onRestrictBackgroundChanged(final boolean isDataSaving) {
++            mCallback.onHotspotChanged();
++        }
++    };
++
+     protected List<SubscriptionInfo> getSubscriptionInfo() {
+         return mKeyguardUpdateMonitor.getFilteredSubscriptionInfo(false);
+     }
+@@ -219,7 +246,8 @@ public InternetDialogController(@NonNull Context context, UiEventLogger uiEventL
+             LocationController locationController,
+             DialogLaunchAnimator dialogLaunchAnimator,
+             WifiStateWorker wifiStateWorker,
+-            CarrierNameCustomization carrierNameCustomization
++            CarrierNameCustomization carrierNameCustomization,
++            HotspotController hotspotController
+     ) {
+         if (DEBUG) {
+             Log.d(TAG, "Init InternetDialogController");
+@@ -254,6 +282,8 @@ public InternetDialogController(@NonNull Context context, UiEventLogger uiEventL
+         mWifiStateWorker = wifiStateWorker;
+         mNonDdsCallStateCallbacksMap = new HashMap<Integer, NonDdsCallStateCallback>();
+         mCarrierNameCustomization = carrierNameCustomization;
++        mHotspotController = hotspotController;
++        mPolicyManager = NetworkPolicyManager.from(context);
+     }
+ 
+     void onStart(@NonNull InternetDialogCallback callback, boolean canConfigWifi) {
+@@ -265,6 +295,8 @@ void onStart(@NonNull InternetDialogCallback callback, boolean canConfigWifi) {
+         mAccessPointController.addAccessPointCallback(this);
+         mBroadcastDispatcher.registerReceiver(mConnectionStateReceiver, mConnectionStateFilter,
+                 mExecutor);
++        mHotspotController.addCallback(mHotspotCallback);
++        mPolicyManager.registerListener(mPolicyListener);
+         // Listen the subscription changes
+         mOnSubscriptionsChangedListener = new InternetOnSubscriptionChangedListener();
+         mSubscriptionManager.addOnSubscriptionsChangedListener(mExecutor,
+@@ -314,6 +346,8 @@ void onStop() {
+                     unregisterTelephonyCallback(mNonDdsCallStateCallbacksMap.get(subId));
+         }
+         mNonDdsCallStateCallbacksMap.clear();
++        mHotspotController.removeCallback(mHotspotCallback);
++        mPolicyManager.unregisterListener(mPolicyListener);
+     }
+ 
+     @VisibleForTesting
+@@ -685,6 +719,12 @@ void launchWifiScanningSetting(View view) {
+         startActivity(intent, view);
+     }
+ 
++    void launchHotspotSetting(View view) {
++        final Intent intent = new Intent(Settings.ACTION_WIFI_TETHER_SETTING);
++        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
++        startActivity(intent, view);
++    }
++
+     /**
+      * Enable or disable Wi-Fi.
+      *
+@@ -880,6 +920,30 @@ boolean activeNetworkIsCellular() {
+         return networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR);
+     }
+ 
++    boolean isHotspotAvailable() {
++        return mHotspotController.isHotspotSupported();
++    }
++
++    boolean isHotspotEnabled() {
++        return mHotspotController.isHotspotEnabled();
++    }
++
++    boolean isHotspotTransient() {
++        return mHotspotController.isHotspotTransient();
++    }
++
++    int getHotspotNumDevices() {
++        return mHotspotController.getNumConnectedDevices();
++    }
++
++    void setHotspotEnabled(boolean enabled) {
++        mHotspotController.setHotspotEnabled(enabled);
++    }
++
++    boolean isDataSaverEnabled() {
++        return mPolicyManager.getRestrictBackground();
++    }
++
+     boolean connect(WifiEntry ap) {
+         if (ap == null) {
+             if (DEBUG) {
+@@ -1202,6 +1266,8 @@ void onAccessPointsChanged(@Nullable List<WifiEntry> wifiEntries,
+                 @Nullable WifiEntry connectedEntry, boolean hasMoreWifiEntries);
+ 
+         void onNonDdsCallStateChanged(int callState);
++
++        void onHotspotChanged();
+     }
+ 
+     void makeOverlayToast(int stringId) {

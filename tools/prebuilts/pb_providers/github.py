@@ -8,6 +8,5 @@ class GithubReleaseProvider(DirectDownloadProvider):
         for asset in release_data["assets"]:
             if re.match(package_data["regex"], asset["name"]):
                 package_data["url"] = asset["browser_download_url"]
-                DirectDownloadProvider.download(package_data, destination)
-                return
+                return DirectDownloadProvider.download(package_data, destination)
         raise ValueError(f"Can't find asset with name that matches {package_data['regex']}!")
