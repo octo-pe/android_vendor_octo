@@ -1,10 +1,8 @@
 - name: F-Droid
   source: fdroid
   packageName: org.fdroid.fdroid
-- name: AdAway
-  source: fdroid
-  packageName: org.adaway
 - name: Fenix
   source: ghrelease
   repo: mozilla-mobile/fenix
   regex: fenix-.*-arm64-v8a\.apk
+  copy_libraries: true

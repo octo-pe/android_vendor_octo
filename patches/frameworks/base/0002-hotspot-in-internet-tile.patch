@@ -156,10 +156,10 @@ index 5b961595fbd3..9432b8763f2b 100644
                  android:paddingEnd="22dp">
  
 diff --git a/packages/SystemUI/res/values/dimens.xml b/packages/SystemUI/res/values/dimens.xml
-index 3e191708ab86..1d2b8edc825e 100644
+index ad5afa216c3d..327339ff696a 100644
 --- a/packages/SystemUI/res/values/dimens.xml
 +++ b/packages/SystemUI/res/values/dimens.xml
-@@ -1336,6 +1336,8 @@
+@@ -1399,6 +1399,8 @@
      <dimen name="internet_dialog_list_max_height">662dp</dimen>
      <!-- The height of the WiFi network in Internet panel. -->
      <dimen name="internet_dialog_wifi_network_height">72dp</dimen>
@@ -169,23 +169,22 @@ index 3e191708ab86..1d2b8edc825e 100644
      <!-- The width of large/content heavy dialogs (e.g. Internet, Media output, etc) -->
      <dimen name="large_dialog_width">@dimen/match_parent</dimen>
 diff --git a/packages/SystemUI/res/values/strings.xml b/packages/SystemUI/res/values/strings.xml
-index e144b43294c6..c9f1d0e8d09b 100644
+index 53f1227383b7..24f9303a2a82 100644
 --- a/packages/SystemUI/res/values/strings.xml
 +++ b/packages/SystemUI/res/values/strings.xml
-@@ -656,6 +656,11 @@
-         <item quantity="one">%d device</item>
-         <item quantity="other">%d devices</item>
-     </plurals>
+@@ -2607,4 +2607,10 @@
+ 
+     <!-- Time format for the Dream Time Complication for 24-hour time format [CHAR LIMIT=NONE] -->
+     <string name="dream_time_complication_24_hr_time_format">kk:mm</string>
++
 +    <!-- QuickSettings: InternetDialog: Summary for how many devices are connected to the hotspot [CHAR LIMIT=NONE] -->
 +    <plurals name="quick_settings_internet_hotspot_summary_num_devices">
 +        <item quantity="one">%d device connected</item>
 +        <item quantity="other">%d devices connected</item>
 +    </plurals>
-     <!-- QuickSettings: Notifications [CHAR LIMIT=NONE] -->
-     <!-- QuickSettings: Flashlight [CHAR LIMIT=NONE] -->
-     <string name="quick_settings_flashlight_label">Flashlight</string>
+ </resources>
 diff --git a/packages/SystemUI/src/com/android/systemui/qs/tiles/dialog/InternetDialog.java b/packages/SystemUI/src/com/android/systemui/qs/tiles/dialog/InternetDialog.java
-index 6eb54f799a24..da426bd2ced4 100644
+index 0dfb2f4063a9..9979df174084 100644
 --- a/packages/SystemUI/src/com/android/systemui/qs/tiles/dialog/InternetDialog.java
 +++ b/packages/SystemUI/src/com/android/systemui/qs/tiles/dialog/InternetDialog.java
 @@ -24,6 +24,8 @@ import android.content.res.TypedArray;
@@ -227,7 +226,7 @@ index 6eb54f799a24..da426bd2ced4 100644
      private Button mDoneButton;
      private Button mAirplaneModeButton;
      private Drawable mBackgroundOn;
-@@ -212,6 +222,7 @@ public class InternetDialog extends SystemUIDialog implements
+@@ -214,6 +224,7 @@ public class InternetDialog extends SystemUIDialog implements
          mProgressBar = mDialogView.requireViewById(R.id.wifi_searching_progress);
          mEthernetLayout = mDialogView.requireViewById(R.id.ethernet_layout);
          mMobileNetworkLayout = mDialogView.requireViewById(R.id.mobile_network_layout);
@@ -235,7 +234,7 @@ index 6eb54f799a24..da426bd2ced4 100644
          mTurnWifiOnLayout = mDialogView.requireViewById(R.id.turn_on_wifi_layout);
          mWifiToggleTitleText = mDialogView.requireViewById(R.id.wifi_toggle_title);
          mWifiScanNotifyLayout = mDialogView.requireViewById(R.id.wifi_scan_notify_layout);
-@@ -231,7 +242,13 @@ public class InternetDialog extends SystemUIDialog implements
+@@ -233,7 +244,13 @@ public class InternetDialog extends SystemUIDialog implements
          mAirplaneModeSummaryText = mDialogView.requireViewById(R.id.airplane_mode_summary);
          mMobileToggleDivider = mDialogView.requireViewById(R.id.mobile_toggle_divider);
          mMobileDataToggle = mDialogView.requireViewById(R.id.mobile_toggle);
@@ -249,7 +248,7 @@ index 6eb54f799a24..da426bd2ced4 100644
          mBackgroundOn = mContext.getDrawable(R.drawable.settingslib_switch_bar_bg_on);
          mInternetDialogTitle.setText(getDialogTitleText());
          mInternetDialogTitle.setGravity(Gravity.START | Gravity.CENTER_VERTICAL);
-@@ -245,6 +262,7 @@ public class InternetDialog extends SystemUIDialog implements
+@@ -247,6 +264,7 @@ public class InternetDialog extends SystemUIDialog implements
          }
  
          setOnClickListener();
@@ -257,7 +256,7 @@ index 6eb54f799a24..da426bd2ced4 100644
          mTurnWifiOnLayout.setBackground(null);
          mAirplaneModeButton.setVisibility(
                  mInternetDialogController.isAirplaneModeEnabled() ? View.VISIBLE : View.GONE);
-@@ -283,6 +301,8 @@ public class InternetDialog extends SystemUIDialog implements
+@@ -285,6 +303,8 @@ public class InternetDialog extends SystemUIDialog implements
          mHandler.removeCallbacks(mHideSearchingRunnable);
          mMobileNetworkLayout.setOnClickListener(null);
          mMobileDataToggle.setOnCheckedChangeListener(null);
@@ -266,7 +265,7 @@ index 6eb54f799a24..da426bd2ced4 100644
          mConnectedWifListLayout.setOnClickListener(null);
          mSeeAllLayout.setOnClickListener(null);
          mWiFiToggle.setOnCheckedChangeListener(null);
-@@ -306,8 +326,10 @@ public class InternetDialog extends SystemUIDialog implements
+@@ -308,8 +328,10 @@ public class InternetDialog extends SystemUIDialog implements
       *
       * @param shouldUpdateMobileNetwork {@code true} for update the mobile network layout,
       * otherwise {@code false}.
@@ -278,7 +277,7 @@ index 6eb54f799a24..da426bd2ced4 100644
          if (DEBUG) {
              Log.d(TAG, "updateDialog");
          }
-@@ -322,6 +344,10 @@ public class InternetDialog extends SystemUIDialog implements
+@@ -324,6 +346,10 @@ public class InternetDialog extends SystemUIDialog implements
                      mInternetDialogController.isCarrierNetworkActive());
          }
  
@@ -289,7 +288,7 @@ index 6eb54f799a24..da426bd2ced4 100644
          if (!mCanConfigWifi) {
              return;
          }
-@@ -336,6 +362,10 @@ public class InternetDialog extends SystemUIDialog implements
+@@ -338,6 +364,10 @@ public class InternetDialog extends SystemUIDialog implements
          updateWifiScanNotify(isWifiEnabled, isWifiScanEnabled, isDeviceLocked);
      }
  
@@ -300,7 +299,7 @@ index 6eb54f799a24..da426bd2ced4 100644
      private void setOnClickListener() {
          mMobileNetworkLayout.setOnClickListener(v -> {
              if (mInternetDialogController.isMobileDataEnabled()
-@@ -354,6 +384,9 @@ public class InternetDialog extends SystemUIDialog implements
+@@ -356,6 +386,9 @@ public class InternetDialog extends SystemUIDialog implements
                                  isChecked, false);
                      }
                  });
@@ -310,7 +309,7 @@ index 6eb54f799a24..da426bd2ced4 100644
          mConnectedWifListLayout.setOnClickListener(this::onClickConnectedWifi);
          mSeeAllLayout.setOnClickListener(this::onClickSeeMoreButton);
          mWiFiToggle.setOnCheckedChangeListener(
-@@ -422,6 +455,8 @@ public class InternetDialog extends SystemUIDialog implements
+@@ -424,6 +457,8 @@ public class InternetDialog extends SystemUIDialog implements
              }
              mMobileNetworkLayout.setBackground(
                      isNetworkConnected ? mBackgroundOn : mBackgroundOff);
@@ -319,7 +318,7 @@ index 6eb54f799a24..da426bd2ced4 100644
  
              TypedArray array = mContext.obtainStyledAttributes(
                      R.style.InternetDialog_Divider_Active, new int[]{android.R.attr.background});
-@@ -437,6 +472,26 @@ public class InternetDialog extends SystemUIDialog implements
+@@ -439,6 +474,26 @@ public class InternetDialog extends SystemUIDialog implements
          }
      }
  
@@ -346,7 +345,7 @@ index 6eb54f799a24..da426bd2ced4 100644
      @MainThread
      private void updateWifiToggle(boolean isWifiEnabled, boolean isDeviceLocked) {
          if (mWiFiToggle.isChecked() != isWifiEnabled) {
-@@ -447,8 +502,15 @@ public class InternetDialog extends SystemUIDialog implements
+@@ -449,8 +504,15 @@ public class InternetDialog extends SystemUIDialog implements
                      ? R.style.TextAppearance_InternetDialog_Active
                      : R.style.TextAppearance_InternetDialog);
          }
@@ -364,7 +363,7 @@ index 6eb54f799a24..da426bd2ced4 100644
  
          if (!mCanChangeWifiState && mWiFiToggle.isEnabled()) {
              mWiFiToggle.setEnabled(false);
-@@ -568,6 +630,35 @@ public class InternetDialog extends SystemUIDialog implements
+@@ -570,6 +632,35 @@ public class InternetDialog extends SystemUIDialog implements
          return mInternetDialogController.getMobileNetworkSummary();
      }
  
@@ -400,7 +399,7 @@ index 6eb54f799a24..da426bd2ced4 100644
      protected void showProgressBar() {
          if (!mInternetDialogController.isWifiEnabled()
                  || mInternetDialogController.isDeviceLocked()) {
-@@ -703,6 +794,12 @@ public class InternetDialog extends SystemUIDialog implements
+@@ -705,6 +796,12 @@ public class InternetDialog extends SystemUIDialog implements
          });
      }
  
@@ -414,7 +413,7 @@ index 6eb54f799a24..da426bd2ced4 100644
      public void onWindowFocusChanged(boolean hasFocus) {
          super.onWindowFocusChanged(hasFocus);
 diff --git a/packages/SystemUI/src/com/android/systemui/qs/tiles/dialog/InternetDialogController.java b/packages/SystemUI/src/com/android/systemui/qs/tiles/dialog/InternetDialogController.java
-index f1fdae7db482..b06eb9aae4c3 100644
+index 3c8775d01e2d..fa247584a46b 100644
 --- a/packages/SystemUI/src/com/android/systemui/qs/tiles/dialog/InternetDialogController.java
 +++ b/packages/SystemUI/src/com/android/systemui/qs/tiles/dialog/InternetDialogController.java
 @@ -34,8 +34,10 @@ import android.graphics.drawable.ColorDrawable;
@@ -532,7 +531,7 @@ index f1fdae7db482..b06eb9aae4c3 100644
      /**
       * Enable or disable Wi-Fi.
       *
-@@ -841,6 +882,30 @@ public class InternetDialogController implements AccessPointController.AccessPoi
+@@ -842,6 +883,30 @@ public class InternetDialogController implements AccessPointController.AccessPoi
          return networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR);
      }
  
@@ -563,7 +562,7 @@ index f1fdae7db482..b06eb9aae4c3 100644
      boolean connect(WifiEntry ap) {
          if (ap == null) {
              if (DEBUG) {
-@@ -1139,6 +1204,7 @@ public class InternetDialogController implements AccessPointController.AccessPoi
+@@ -1140,6 +1205,7 @@ public class InternetDialogController implements AccessPointController.AccessPoi
  
          void onAccessPointsChanged(@Nullable List<WifiEntry> wifiEntries,
                  @Nullable WifiEntry connectedEntry, boolean hasMoreWifiEntries);
