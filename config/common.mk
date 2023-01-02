@@ -9,4 +9,3 @@ endif
 PRODUCT_PACKAGES += F-DroidPrivilegedExtension 
 # Enable extendrom
 $(call inherit-product-if-exists, vendor/extendrom/config/common.mk)
-$(call inherit-product, packages/overlays/ThemeIcons/config.mk)
