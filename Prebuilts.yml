@@ -5,4 +5,4 @@
   source: ghrelease
   repo: mozilla-mobile/fenix
   regex: fenix-.*-arm64-v8a\.apk
-  copy_libraries: true
+  compressed: true

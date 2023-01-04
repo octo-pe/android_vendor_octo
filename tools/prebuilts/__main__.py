@@ -8,6 +8,7 @@ import subprocess
 import os
 import zipfile
 from pathlib import Path
+import gzip
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("prebuilts")
 MAKE_TEMPLATE = """
@@ -15,8 +16,9 @@ LOCAL_PATH := $(call my-dir)
 
 include $(CLEAR_VARS)
 LOCAL_MODULE := {name}
-LOCAL_SRC_FILES := $(LOCAL_MODULE).apk
+LOCAL_SRC_FILES := {name}.apk
 LOCAL_CERTIFICATE := PRESIGNED
+LOCAL_PRODUCT_MODULE := true
 LOCAL_MODULE_TAGS := optional
 LOCAL_MODULE_CLASS := APPS
 LOCAL_DEX_PREOPT := false
@@ -24,20 +26,24 @@ LOCAL_MODULE_SUFFIX := $(COMMON_ANDROID_PACKAGE_SUFFIX)
 LOCAL_OVERRIDES_PACKAGES := {overrides}
 LOCAL_USES_LIBRARIES := {required}
 LOCAL_OPTIONAL_USES_LIBRARIES := {optional}
+LOCAL_REPLACE_PREBUILT_APK_INSTALLED := $(LOCAL_PATH)/{name}.apk
 {extras}
 include $(BUILD_PREBUILT)
 """
-LIB_TEMPALTE = """
+COMPRESSED = """
 include $(CLEAR_VARS)
-LOCAL_MODULE := {libname}
-LOCAL_MODULE_CLASS := SHARED_LIBRARIES
-LOCAL_MODULE_PATH := $(TARGET_OUT)/app/{name}/lib/arm64/
-LOCAL_SRC_FILES := libs/{libname}
-OVERRIDE_BUILT_MODULE_PATH := $(TARGET_OUT_INTERMEDIATE_LIBRARIES)
-LOCAL_CHECK_ELF_FILES := false
+LOCAL_MODULE := Fenix
+LOCAL_MODULE_TAGS := optional
+LOCAL_SRC_FILES := $(LOCAL_MODULE).apk.gz
+LOCAL_MODULE_CLASS := ETC
+LOCAL_MODULE_PATH := $(TARGET_OUT_PRODUCT)/app/$(LOCAL_MODULE)/
+LOCAL_MODULE_SUFFIX := .apk.gz
+LOCAL_DEX_PREOPT := false
+LOCAL_USES_LIBRARIES := {required}
+LOCAL_OPTIONAL_USES_LIBRARIES := {optional}
 include $(BUILD_PREBUILT)
+
 """
-PROHIBIT_TOUCHING_APK = "\nLOCAL_REPLACE_PREBUILT_APK_INSTALLED := $(LOCAL_PATH)/$(LOCAL_MODULE).apk"
 PRIVELEGED = "\nLOCAL_PRIVILEGED_MODULE := true"
 
 
@@ -54,26 +60,10 @@ def get_requirements(destination):
     return {"required": requirements, "optional": requirements_optional}
 
 
-def extract_libs(destination):
-    libs = []
-    libspath = Path("/".join(destination.split("/")
-                             [:-1])) / "libs"
-    os.makedirs(libspath, exist_ok=True)
-    with zipfile.ZipFile(destination, "r") as zf:
-        files = zf.namelist()
-        for file in files:
-            if file.startswith("lib/arm64"):
-                (libspath / Path(file.split("/")
-                 [-1])).write_bytes(zf.read(file))
-                libs.append(file)
-    return libs
-
-
 base_app = {
-    "dont_touch_apk": False,
-    "copy_libraries": False,
     "source": None,
-    "priveleged": False
+    "priveleged": False,
+    "compressed": False
 }
 
 
@@ -90,6 +80,7 @@ def main(config_file):
     applist = []
     for app_cf in config:
         app = dict(**base_app)
+        template = MAKE_TEMPLATE
         app.update(app_cf)
         assert app["source"] in pb_providers.PROVIDERS
         os.makedirs(os.path.join(target_path, app["name"]), exist_ok=True)
@@ -108,23 +99,17 @@ def main(config_file):
         applist.append(app["name"])
         result = ""
         extras = ""
-        if app["copy_libraries"] or app["dont_touch_apk"]:
-            extras += PROHIBIT_TOUCHING_APK
+        if app["compressed"]:
+            with gzip.open(destination + ".gz", 'wb') as gzf:
+                with open(destination, "rb") as f:
+                    gzf.write(f.read())
+            template = MAKE_TEMPLATE.replace(
+                "LOCAL_MODULE := {name}", "LOCAL_MODULE := {name}-Stub") + COMPRESSED
+            applist.append(f"{app['name']}-Stub")
         if app["priveleged"]:
             extras += PRIVELEGED
-        if app["copy_libraries"]:
-            extracted_libs = extract_libs(destination)
-            libnames = []
-            for lib in extracted_libs:
-                libname = lib.split("/")[-1]
-                result += LIB_TEMPALTE.format(
-                    name=app["name"], libname=libname)
-                applist.append(libname)
-                libnames.append(libname.replace(".so", ""))
-            extras += "\nLOCAL_SHARED_LIBRARIES := " + \
-                " ".join(libnames)
-        result = MAKE_TEMPLATE.format(name=app["name"], extras=extras, overrides=app.get("overrides", ""), required=" ".join(
-            requirements["required"]), optional=" ".join(requirements["optional"])) + result
+        result = template.format(name=app["name"], extras=extras, overrides=app.get("overrides", ""), required=" ".join(
+            requirements["required"]), optional=" ".join(requirements["optional"]))
         if result != current_mk:
             with open(mkpath, 'w', newline="") as f:
                 logger.info("Writing new makefile for %s", app["name"])

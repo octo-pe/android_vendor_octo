@@ -14,4 +14,8 @@ set +eu
 export ENABLE_EXTENDROM=true
 export EXTENDROM_PREROOT_BOOT=true
 export EXTENDROM_PACKAGES="Magisk | SignMagisk"
-$PWD/vendor/extendrom/get_prebuilts.sh
+if [[ ! -f "vendor/extendrom/Android.mk" || ! -f "out/.magisk" ]]
+then
+    echo "Getting extendrom stuff..."
+    $PWD/vendor/extendrom/get_prebuilts.sh
+fi
