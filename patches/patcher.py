@@ -6,9 +6,13 @@ import subprocess
 from pathlib import Path
 
 
-def execute_command(command):
+def execute_command(command, cwd=None):
     if not "whatif" in sys.argv:
-        ret_code = subprocess.call(command, shell=True)
+        if cwd is None:
+            cwd = os.getcwd()
+        cwd = os.path.abspath(cwd)
+        print("chdir", cwd)
+        ret_code = subprocess.call(command.split(' '), cwd=cwd)
         assert ret_code == 0
     else:
         print("WhatIf: Executing", command)
@@ -25,16 +29,24 @@ def apply():
         patch_listing[patch_folder].append(os.path.abspath(patch))
         print("Queuing up patch", patch, "for", patch_folder)
     for patch_folder in patch_listing:
-        patch_listing[patch_folder] = sorted(patch_listing[patch_folder])
+        patch_listing[patch_folder] = sorted(
+            patch_listing[patch_folder])
     for patch_folder, patches in patch_listing.items():
         if "unpatch" in sys.argv:
             patches = reversed(patches)
+        execute_command("git reset --hard", patch_folder)
+        execute_command("git clean -f -x", patch_folder)
         for patch in patches:
-            command = f"git -C {patch_folder} apply -- {patch}"
             if "unpatch" in sys.argv:
-                command = command.replace("apply --", "apply -R")
+                command = f"git apply -R {patch}"
+            else:
+                command = f"git apply --whitespace=fix --3way -- {patch}"
             print("(Un)Applying patch", patch, "to", patch_folder)
-            execute_command(command)
+            try:
+                execute_command(command, patch_folder)
+            except AssertionError as e:
+                if "unpatch" not in sys.argv:
+                    raise e
 
 
 def create():

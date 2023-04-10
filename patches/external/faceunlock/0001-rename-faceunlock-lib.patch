@@ -1,0 +1,26 @@
+diff --git a/Android.bp b/Android.bp
+index 46d6a76..de8b481 100644
+--- a/Android.bp
++++ b/Android.bp
+@@ -105,7 +105,8 @@ cc_prebuilt_library_shared {
+ }
+ 
+ cc_prebuilt_library_shared {
+-    name: "libmpbase",
++    name: "libmpbase_faceunlock",
++    stem: "libmpbase",
+     strip: {
+         none: true,
+     },
+diff --git a/dependencies/Android.bp b/dependencies/Android.bp
+index e87371f..a97c9bb 100644
+--- a/dependencies/Android.bp
++++ b/dependencies/Android.bp
+@@ -18,6 +18,6 @@ cc_library {
+         "libarcsoft_faceid",
+         "libarcsoft-lib",
+         "libarcsoftbase",
+-        "libmpbase",
++        "libmpbase_faceunlock",
+     ],
+ }

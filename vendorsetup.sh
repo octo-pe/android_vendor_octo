@@ -12,10 +12,14 @@ echo "Prebuilt packages: $OCTO_PACKAGES"
 set +eu
 ###########  extendrom section ##########
 export ENABLE_EXTENDROM=true
-export EXTENDROM_PREROOT_BOOT=true
-export EXTENDROM_PACKAGES="Magisk | SignMagisk"
-if [[ ! -f "vendor/extendrom/Android.mk" || ! -f "out/.magisk" ]]
+export EXTENDROM_PACKAGES="Magisk"
+if [[ ! -d "$PWD/out/.magisk" ]]
 then
     echo "Getting extendrom stuff..."
     $PWD/vendor/extendrom/get_prebuilts.sh
+fi
+if [[ ! -d "$PWD/out/.magisk" ]]
+then
+    echo "Error! Magisk folder didn't appear!"
+    exit 1
 fi

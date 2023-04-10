@@ -9,3 +9,7 @@ endif
 PRODUCT_PACKAGES += F-DroidPrivilegedExtension 
 # Enable extendrom
 $(call inherit-product-if-exists, vendor/extendrom/config/common.mk)
+# Enable PLE
+PIXEL_LAUNCHER_VARIANT := nomod2
+ICONS_VARIANT := teamfilesicons
+$(call inherit-product, vendor/PixelLauncherExtended/PixelLauncher.mk)
