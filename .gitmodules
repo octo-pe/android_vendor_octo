@@ -1,0 +1,3 @@
+[submodule "apps/S3Updater"]
+	path = apps/S3Updater
+	url = https://github.com/octo-pe/android_packages_apps_Updater.git

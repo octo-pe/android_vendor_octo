@@ -18,8 +18,3 @@ then
     echo "Getting extendrom stuff..."
     $PWD/vendor/extendrom/get_prebuilts.sh
 fi
-if [[ ! -d "$PWD/out/.magisk" ]]
-then
-    echo "Error! Magisk folder didn't appear!"
-    exit 1
-fi
